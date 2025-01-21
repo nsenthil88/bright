@@ -1,0 +1,101 @@
+---
+- name: Creating "/tmp/ansible/"  directory to copy all the scripts for execution.
+  file:
+    path: /tmp/ansible/
+    mode: "0755"
+    state: directory
+
+- name: check if hardening is done before.
+  stat:
+    path: /tmp/ansible/hardenreport.txt
+  register: Harden
+
+- name: Skip if hardening is done before.
+  debug:
+    msg: hardening is already done before
+  when: Harden.stat.exists
+
+- name: Copy os hardening scripts files to /tmp/ansible/.
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{item.mode}}"
+  with_items:
+    - { src: '/IC_scripts/DONTTOUCH/os_hardning/files/01_initial.sh',dest: '/tmp/ansible/', mode: '0755' }
+    - { src: '/IC_scripts/DONTTOUCH/os_hardning/files/02_services.sh',dest: '/tmp/ansible/', mode: '0755' }
+    - { src: '/IC_scripts/DONTTOUCH/os_hardning/files/03_network.sh',dest: '/tmp/ansible/', mode: '0755' }
+    - { src: '/IC_scripts/DONTTOUCH/os_hardning/files/04_logging.sh',dest: '/tmp/ansible/', mode: '0755' }
+    - { src: '/IC_scripts/DONTTOUCH/os_hardning/files/05_access.sh',dest: '/tmp/ansible/', mode: '0755' }
+    - { src: '/IC_scripts/DONTTOUCH/os_hardning/files/06_system.sh',dest: '/tmp/ansible/', mode: '0755' }
+  when: Harden.stat.exists == false
+
+- name: Execute the command in remote machine
+  command: "sh /tmp/ansible/{{ item }}"
+  ignore_errors: yes
+  loop:
+    - 01_initial.sh
+    - 02_services.sh
+    - 03_network.sh
+    - 04_logging.sh
+    - 05_access.sh
+    - 06_system.sh
+  register: script
+  when: Harden.stat.exists == false
+
+- name: Creating individual report with details for specific server
+  copy:
+    dest: /tmp/ansible/hardenreport.txt
+    content: >
+      {{ script }}
+  when: Harden.stat.exists == false
+
+- name: Deleting the scripts on /tmp/ansible/.
+  file:
+    path: "{{ item.src }}"
+    state: absent
+  with_items:
+    - { src: '/tmp/ansible/01_initial.sh' }
+    - { src: '/tmp/ansible/02_services.sh' }
+    - { src: '/tmp/ansible/03_network.sh' }
+    - { src: '/tmp/ansible/04_logging.sh' }
+    - { src: '/tmp/ansible/05_access.sh' }
+    - { src: '/tmp/ansible/06_system.sh' }
+  when: Harden.stat.exists == false
+
+- name: Disable IPV6
+  blockinfile:
+   dest: /etc/sysctl.conf
+   block: |
+    net.ipv6.conf.all.disable_ipv6 = 1
+    net.ipv6.conf.default.disable_ipv6 = 1
+    net.ipv6.conf.lo.disable_ipv6 = 1
+
+- name: restarting the sysctl to disable IPV6
+  command: sysctl -p
+
+
+- name: Allow Root login.
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^Permitrootlogin no'
+    line: 'Permitrootlogin yes'
+- name: Install samba-client.
+  zypper:
+    name: samba-client
+    state: present
+  ignore_errors: yes
+  when: ansible_os_family == "Suse"
+- name: Install samba-winbind.
+  zypper:
+    name: samba-winbind
+    state: present
+  ignore_errors: yes
+  when: ansible_os_family == "Suse"
+
+- name: Install sysstat for sap .
+  zypper:
+    name: sysstat
+    state: present
+  ignore_errors: yes
+  when: ansible_os_family == "Suse"
+...

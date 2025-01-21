@@ -1,0 +1,7 @@
+---
+- name: replacing ClientAliveInterval
+  ansible.builtin.lineinfile:
+     path: /etc/ssh/sshd_config
+     regexp: '^ClientAliveInterval'
+     line: '#ClientAliveInterval 180'
+...

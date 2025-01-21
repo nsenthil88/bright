@@ -1,0 +1,15 @@
+---
+- name: Add  /etc/rsyslog.conf entry
+  ansible.builtin.lineinfile:
+    path: /etc/rsyslog.conf
+    line: "{{ item }}"
+  with_items:
+    - '# Adding syslog entry for Qradar'
+    - 'authpriv.* @@10.213.2.132:514'
+
+- name: Service rsyslog enable and Restarted.
+  service:
+    name: syslog
+    state: reloaded
+    enabled: yes
+...

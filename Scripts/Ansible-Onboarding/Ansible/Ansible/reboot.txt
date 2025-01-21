@@ -1,0 +1,4 @@
+---
+- name: Rebooting VMS
+  reboot:
+...

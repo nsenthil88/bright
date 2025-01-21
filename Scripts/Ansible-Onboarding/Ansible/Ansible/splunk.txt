@@ -1,0 +1,50 @@
+---
+- name: Verify splunk installation .
+  stat:
+    path: /opt/splunkforwarder/bin/
+  register: splunk_installation
+
+- name: Skip splunk installation if Already installed.
+  debug:
+    msg: splunk is already installed
+  when: splunk_installation.stat.exists
+
+- name: Extract splunkforwarder.tgz into "/opt/" to install splunk.
+  unarchive:
+    src: /IC_scripts/DONTTOUCH/splunkforwarder-8.1.2-545206cc9f70-Linux-x86_64.tgz
+    dest: /opt/
+  when: splunk_installation.stat.exists == false
+
+- name: Installing Splunk.
+  command: /opt/splunkforwarder/bin/splunk set deploy-poll 10.213.35.12:8089 --accept-license --seed-passwd forward@123
+  when: splunk_installation.stat.exists == false
+
+- name: Stop Splunk on Suse VMs only.
+  command: /opt/splunkforwarder/bin/splunk stop
+  ignore_errors: yes
+  when: ansible_os_family == "Suse"
+
+- name: Update configuration for Splunk to work on Suse Vms.
+  shell: /opt/splunkforwarder/bin/splunk enable boot-start -systemd-managed 0
+  when: ansible_os_family == "Suse"
+  ignore_errors: yes
+- name: Start Splunk on Suse VMs.
+  command: /opt/splunkforwarder/bin/splunk start
+  ignore_errors: yes
+  when: ansible_os_family == "Suse"
+- name: Updating values in /etc/init.d/splunk to 2345 20 80 on Suse VMs.
+  lineinfile:
+    path: /etc/init.d/splunk
+    regexp: '^# chkconfig: 2345 90 60'
+    line: 'chkconfig: 2345 20 80'
+  when: ansible_os_family == "Suse"
+  ignore_errors: yes
+- name: start Splunk.
+  command: /opt/splunkforwarder/bin/splunk restart
+  ignore_errors: yes
+
+- name: Adding hkconfig --add splunk.
+  command: chkconfig --add splunk
+  when: ansible_os_family == "Suse"
+  ignore_errors: yes
+...

@@ -1,0 +1,27 @@
+---
+- name: Check and register if quals Service is installed
+  shell: "if systemctl --type=service | grep -q  qualys-cloud-agent.service;   then echo true;   else echo false; fi"
+  register: qualys_service_exists
+
+- name: Copy Qualys RPM File | copy the RPM
+  copy:
+    src: "/IC_scripts/DONTTOUCH/QualysCloudAgent.rpm"
+    dest: "/tmp/ansible/QualysCloudAgent.rpm"
+  when: qualys_service_exists.stdout == "false"
+
+- name: Install Qualys (rpm)
+  command: 'rpm -ivh /tmp/ansible/QualysCloudAgent.rpm'
+  when: qualys_service_exists.stdout == "false"
+
+- name: Activate Qualys (rpm)
+  command: "./qualys-cloud-agent.sh ActivationId=4563565e-0663-4065-bf92-160a5335d65a CustomerId=804e3e41-9a09-ea8a-8297-5c40a51a40f1"
+  args:
+    chdir: /usr/local/qualys/cloud-agent/bin
+
+- name: Deleting the QualysCloudAgent rpm on /tmp/ansible/.
+  file:
+    path: "{{ item.src }}"
+    state: absent
+  with_items:
+    - { src: '/tmp/ansible/QualysCloudAgent.rpm' }
+...

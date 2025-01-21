@@ -1,0 +1,23 @@
+---
+- name: Update all packages on OpenSUSE/SUSE Linux.
+  zypper:
+    name: '*'
+    state: latest
+- name: Confirm Vms to reboot
+  pause:
+- name: Re-Confirm Vms to reboot
+  pause:
+- name: Rebooting VMS
+  reboot:
+
+
+- name: Copy py  script to fix repo issue  files to /tmp/ansible/.
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{item.mode}}"
+  with_items:
+    - { src: '/IC_scripts_new/sc-repocheck.py',dest: '/tmp/ansible/', mode: '0755' }
+- name: Run a script sc-repocheck.py
+  shell: python3 /tmp/ansible/sc-repocheck.py
+...

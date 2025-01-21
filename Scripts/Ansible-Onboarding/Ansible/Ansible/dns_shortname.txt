@@ -1,0 +1,7 @@
+---
+- name: replacing in /etc/resolv.conf
+  ansible.builtin.lineinfile:
+    path: /etc/resolv.conf
+    regexp: '^search reddog.microsoft.com'
+    line: 'search reddog.microsoft.com bhfworks.net'
+...

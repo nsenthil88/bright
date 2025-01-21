@@ -1,0 +1,20 @@
+---
+- hosts: post
+  become: yes
+  become_user: root
+  roles:
+      - vmupdate_reboot
+      - kdump
+      - splunk
+      - reboot
+      - NTP
+      - dns_shortname
+      - Amin_rights
+      - Banners_remove
+      - carbon_black
+      - Qradar_syslog
+      - Qualys
+      - ClientAliveInterval
+      - os_hardening
+      - reboot
+...

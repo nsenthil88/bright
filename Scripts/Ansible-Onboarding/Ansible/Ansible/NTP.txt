@@ -1,0 +1,16 @@
+---
+- name: add entry for NTP
+  ansible.builtin.lineinfile:
+    path: /etc/ntp.conf
+    line: "{{ item }}"
+  with_items:
+    - '# Adding NTP Sever details'
+    - 'server 10.213.1.10'
+    - 'server 10.213.1.11'
+- name: Service ntp enable and Restarted.
+  service:
+    name: ntpd
+    state: restarted
+    enabled: yes
+- name:  print ntp
+  shell: "ntpq -p"

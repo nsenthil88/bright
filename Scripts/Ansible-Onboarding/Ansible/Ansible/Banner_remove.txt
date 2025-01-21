@@ -1,0 +1,21 @@
+---
+- name: file deletion for removing the banners installed.
+  file:
+    path: "{{ item }}"
+    state: absent
+    force: yes
+  loop:
+    - /etc/motd
+    - /etc/issue
+    - /etc/issue.net
+
+- name: file creation correcting the banners
+  file:
+    path: "{{ item }}"
+    state: touch
+    force: yes
+  loop:
+    - /etc/motd
+    - /etc/issue
+    - /etc/issue.net
+...

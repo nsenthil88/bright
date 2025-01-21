@@ -1,0 +1,27 @@
+---
+- name: Linux Admin Access for domain Group
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    line: "{{ item }}"
+  with_items:
+    - '# Linux Admin Access for domain Group'
+    - '%BHFWORKS\\bhfic ALL=(ALL) NOPASSWD: ALL'
+    - '%BHFWORKS\\bhfioadmins ALL=(ALL) NOPASSWD: ALL'
+    - '%BHFWORKS\\bhfiowindows ALL=(ALL) NOPASSWD: ALL'
+    - '%BHFWORKS\\bhfiolinux ALL=(ALL) NOPASSWD: ALL'
+    - '%BHFWORKS\\bhfiobackup ALL=(ALL) NOPASSWD: ALL'
+    - '%BHFWORKS\\bhfbasisadmins ALL=(ALL) NOPASSWD: ALL'
+    - '%BHFWORKS\\bhfbasis ALL=(ALL) NOPASSWD: ALL'
+    - '# Linux Admin Access for mywizard service account'
+    - 'BHFWORKS\\svclinuxsap ALL=(ALL) NOPASSWD: ALL'
+- name: "replacing #   PasswordAuthentication yes for logging in /etc/ssh/ssh_config "
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/ssh_config
+    regexp: '^#   PasswordAuthentication yes'
+    line: 'PasswordAuthentication yes'
+- name: "replacing #   PasswordAuthentication yes for logging in /etc/ssh/sshd_config "
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#PasswordAuthentication yes'
+    line: 'PasswordAuthentication yes'
+...

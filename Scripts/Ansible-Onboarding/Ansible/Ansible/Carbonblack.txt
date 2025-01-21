@@ -1,0 +1,51 @@
+---
+- name: check for kernal-version azure
+  shell: "if uname -r | grep -q  azure ;   then echo azure ;   else echo false; fi"
+  register: azure_kernal_version
+
+- name: check for kernal-version default
+  shell: "if uname -r | grep -q  default ;   then echo default ;   else echo false; fi"
+  register: default_kernal_version
+
+- name: if kernal-version azure installing related packages
+  shell: "zypper install -y --oldpackage kernel-azure-devel=$(uname -r | sed s/-azure//)"
+  when: azure_kernal_version.stdout == "azure"
+  ignore_errors: yes
+- name: check for kernal-version default
+  shell: "zypper install -y --oldpackage kernel-default-devel=$(uname -r | sed s/-default//)"
+  when: default_kernal_version.stdout == "default"
+  ignore_errors: yes
+- name: Check and register if carbon Service Exists
+  shell: "if systemctl --type=service | grep -q  cbagentd.service;   then echo true;   else echo false; fi"
+  register: carbon_service_exists
+
+- name: Extractcb-psc-sensor-suse-2.11.1.505724.tar into "/tmp/ansible/" to install carbon.
+  unarchive:
+    src: /IC_scripts/DONTTOUCH/cb-psc-sensor-suse-2.11.1.505724.tar
+    dest: /tmp/ansible
+  when: carbon_service_exists.stdout == "false"
+
+- name: main | install Carbon Black
+  command:
+    cmd: "./install.sh 'VH5O8F2VW6QX285F67N'"
+  args:
+    chdir: "/tmp/ansible"
+  when: carbon_service_exists.stdout == "false"
+  register: Carbon
+
+- name: Creating individual carbon report with details for specific server
+  copy:
+    dest: /tmp/ansible/carbon-blackreport.txt
+    content: >
+      {{ Carbon }}
+
+- name: Deleting the scripts on /tmp/ansible/.
+  file:
+    path: "{{ item.src }}"
+    state: absent
+  with_items:
+    - { src: '/tmp/ansible/blades' }
+    - { src: 'cb-psc-sensor-2.11.1-505724.x86_64.rpm' }
+    - { src: '/tmp/ansible/install.sh' }
+
+...

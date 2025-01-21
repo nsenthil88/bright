@@ -1,0 +1,27 @@
+---
+- name: Copy kdump files to /tmp/ansible/.
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{item.mode}}"
+  with_items:
+    - { src: '/IC_scripts/DONTTOUCH/kdump.sh',dest: '/tmp/ansible/', mode: '0755' }
+
+- name: Execute kdump.sh in remote machine
+  command: "sh /tmp/ansible/kdump.sh"
+  ignore_errors: yes
+  register: kdump
+
+- name: Creating individual kdump report with details for specific server
+  copy:
+    dest: /tmp/ansible/kdump.txt
+    content: >
+      {{ kdump }}
+
+- name: Deleting the scripts on /tmp/ansible/.
+  file:
+    path: "{{ item.src }}"
+    state: absent
+  with_items:
+    - { src: '/tmp/ansible/kdump.sh' }
+...
